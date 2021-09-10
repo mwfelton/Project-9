@@ -7,7 +7,7 @@ const morgan = require('morgan');
 // my code
 // const { sequelize } = require("./models");
 const { sequelize } = require('./models')
-// const { Sequelize } = require('sequelize');
+const { Sequelize } = require('sequelize');
 
 
 // variable to enable global error logging
@@ -16,7 +16,7 @@ const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'tr
 // create the Express app
 const app = express();
 
-app.use(express.json())
+// app.use(express.json())
 
 // setup morgan which gives us http request logging
 app.use(morgan('dev'));
@@ -26,8 +26,8 @@ app.use(morgan('dev'));
 const users = require('./routes/users');
 const courses = require('./routes/courses');
 
-app.use('/api', users)
 app.use('/api', courses)
+app.use('/api', users)
 
 // setup a friendly greeting for the root route
 app.get('/', (req, res) => {
@@ -39,9 +39,8 @@ app.get('/', (req, res) => {
 // send 404 if no other route matched
 app.use((req, res) => {
   res.status(404).json({
-    message: 'Route Not Found',
+    message: 'Route Not Found, find it!!!!',
   });
-  req.body('fishhh')
 });
 
 // setup a global error handler
