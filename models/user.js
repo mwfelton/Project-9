@@ -1,5 +1,6 @@
 'use strict';
 const { Model } = require('sequelize');
+const bcrypt = require('bcrypt')
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {}
@@ -33,12 +34,15 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
+        isEmail: {
+          msg: 'Please provide a valid email address'
+        },
         notNull: {
           msg: 'Please enter an email address'
         },
-        isEmail: {
-          msg: 'Please provide a valid email address'
-        }
+        notEmpty: {
+          msg: 'Please provide a valid email address '
+        },
       }
     },
     password: {
@@ -68,18 +72,3 @@ module.exports = (sequelize, DataTypes) => {
 
   return User;
 };
-
-// (async () => {
-//     await sequelize.sync({ force: true });
-  
-//     try {
-//       const userTest = await User.create({
-//         firstName: 'Toy Story'
-//       });
-//       console.log(userTest.toJSON());
-//       console.log('cheese pants')
-  
-//     } catch (error) {
-//       console.error('Error connecting to the database: ', error);
-//     }
-//   })();
