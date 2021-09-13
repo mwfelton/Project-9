@@ -120,5 +120,4 @@ router.put('/courses/:id', asyncHandler(async (req, res)=>{
     })
   );
   
-  // exports router
   module.exports = router;
