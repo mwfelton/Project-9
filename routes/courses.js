@@ -41,62 +41,49 @@ router.get('/courses/:id', asyncHandler(async (req, res)=>{
   );
 
 
-router.post('/courses', asyncHandler(async (req, res)=>{
-    try {
-        const courseBody = req.body;
-  
-        //* adds userId to req.body if the user is authenticated
-        courseBody.userId = req.currentUser.id;
-  
-        const course = await Course.create(courseBody);
-        res.status(201).location(`/api/courses/${course.id}`).end();
-      } catch (err) {
-        console.log("Error ", err.name);
-  
-        // * checks the type of Sequelize error
-        if (err.name === "SequelizeValidationError") {
-          const errors = err.errors.map((err) => err.message);
-          res.status(400).json({ errors });
-        } else {
-          // * if not a validation or unique constraint error throw an error thats caught by global err handler
-          throw err;
-        }
-      }
-    })
-  );
-
-router.put('/courses/:id', asyncHandler(async (req, res)=>{
-    try {
-        const course = await Course.findByPk(req.params.id);
-  
-        if (course) {
-          // checks if the course belongs to the current user
-          if (req.currentUser.id === course.userId) {
-            // * update the database
-            await course.update(req.body);
-            res.status(204).json({ message: "Course Updated" });
+  router.post('/courses', authenticateUser, asyncHandler(async ( req, res ) => {
+    try{
+        let newCourse = req.body 
+        const createCourse = await Course.create(newCourse)
+        const { id } = createCourse
+         res.status(201)
+         .location(`/api/courses/${id}`)
+         .end()
+        }catch(error){
+        if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+            const errors = error.errors.map(err => err.message);
+            res.status(400).json({ errors });   
           } else {
-            res
-              .status(403)
-              .json({ message: "You are not authorized to edit this coures" });
+            throw error;
           }
-        } else {
-          res.status(404).json({ message: "Course Not found" });
         }
-      } catch (err) {
-        console.log("Error ", err.name);
-  
-        // * checks the type of Sequelize error
-        if (err.name === "SequelizeValidationError") {
-          const errors = err.errors.map((err) => err.message);
-          res.status(400).json({ errors });
+}))
+
+router.put('/courses/:id', authenticateUser, asyncHandler(async ( req, res ) =>{
+  try{
+      const course = await Course.findByPk(req.params.id)
+          if( req.currentUser.id === course.userId ){
+              if(course){
+                  console.log('UPDATING COURSE')
+                  await course.update(req.body)
+                  res.status(204).end()
+              }else{
+                  res.status(404).end()
+              }
+          }else{
+              res.status(403)
+              .json({message: "Update Failed. User does not have permissions for requested course"})
+          }
+          
+  }catch(error){
+      if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+          const errors = error.errors.map(err => err.message);
+          res.status(400).json({ errors });   
         } else {
-          // * checks the type of Sequelize error
-          throw err;
+          throw error;
         }
       }
-    })
-  );
+}))
 
 
   router.delete(
