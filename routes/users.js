@@ -1,9 +1,10 @@
 const express = require('express');
-
+const bcrypt = require('bcrypt');
 const { User } = require('../models')
 const router = express.Router();
 const { authenticateUser } = require('../middleware/auth-user');
 const { asyncHandler } = require("../middleware/async-handler");
+const bodyParser = require('body-parser');
 
 // A /api/users GET route that will return all properties and values for the currently authenticated User along with a 200 HTTP status code.
 router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
@@ -21,26 +22,23 @@ router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
 router.post(
   "/users",
   asyncHandler(async (req, res) => {
+    console.log(req.body)
     try {
-      await User.create(req.body);
-      res.status(201).location("/").end();
-    } catch (err) {
-      console.log("Error ", err.name);
-
-      // * checks the type of Sequelize error
-      if (
-        err.name === "SequelizeValidationError" ||
-        err.name === "SequelizeUniqueConstraintError"
-      ) {
-        const errors = err.errors.map((err) => err.message);
-        res.status(400).json({ errors });
-      } else {
-        // * checks the type of Sequelize error
-        throw err;
-      }
+        const user = await User.build(req.body);
+        if (user.password) {
+            user.password = bcrypt.hashSync(user.password, 10);
+        }
+        await user.save()
+        res.status(201).location('/').end()
+    } catch (e) {
+        if (e.name === 'SequelizeUniqueConstraintError' || e.name === 'SequelizeValidationError') {
+            const errors = e.errors.map(err => err.message);
+            res.status(400).json({ errors });
+        } else {
+            throw e;
+        }
     }
-  })
-);
+}))
 
 
 module.exports = router;
