@@ -87,6 +87,7 @@ router.put('/courses/:id', authenticateUser, asyncHandler(async(req, res) => {
           throw e;
       }
   }
+}));
 
 
   router.delete(
